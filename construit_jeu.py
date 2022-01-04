@@ -25,8 +25,16 @@ def main():
 
 # TODO à completer
 def verification_triche(T):
-    #T_split = [ligne.split for ligne in T]
-    #n = len(T)
+    T_split = [ligne.split(',') for ligne in T]
+
+    mails = [ligne[-1].strip() for ligne in T_split]
+    if len(mails) != len(set(mails)):
+        raise TricheError("Il y a au moins un doublon parmis les adresses mail.")
+
+    nom_prenom = [(ligne[0], ligne[1]) for ligne in T_split]
+    if len(nom_prenom) == len(set(nom_prenom)):
+        raise TricheError("Il y a au moins un doublon parmis les adresses mail.")
+
     return None
 
 if __name__ == "__main__" :
