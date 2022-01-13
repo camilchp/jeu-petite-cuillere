@@ -4,10 +4,18 @@ from email import message_from_bytes
 import re
 import smtplib, ssl
 from pathlib import Path
+from getpass import getpass
 
 jeu = Path("Jeu")
 joueurs_en_vie = jeu / "joueurs_en_vie.csv"
 historique = jeu / "historique.txt"
+
+# compte mail
+try:
+    from login import adresse, mot_de_passe
+except:
+    adresse = input("---adresse mail ?--->")
+    mot_de_passe = getpass("---mot de passe de la boite mail ?--->")
 
 def main():
     tueurs = cree_liste_tueurs()
@@ -51,21 +59,13 @@ def main():
 
 #--------------------------------------------------------------------------------------------------------------------
 def cree_liste_tueurs(): # TODO : envoyer un mail à tout les joueurs lors d'un triple kill , quintuple kill... ex "Archibald Haddock is on a killing spree !"
-    tueurs = []
-
-    # compte mail
-    adresse = "lapetitecuillere69@gmail.com"
-    mot_de_passe = input("---mot de passe de la boite mail?--->")
-
     # cree une classe IMAP4 avec SSL 
     imap = imaplib.IMAP4_SSL("imap.gmail.com")
     # authentification
     imap.login(adresse, mot_de_passe)
-
     imap.select('INBOX') # Pour debuger, ajouter en argument readonly=True, le script ne markera pas les messages comme lus à chaque execution
-
     (retcode, messages) = imap.uid('SEARCH', None, '(UNSEEN)')
-
+    tueurs = []
     nb_mails_non_lus = 0
     nb_morts = 0
     if retcode == 'OK':
@@ -94,10 +94,6 @@ def envoyer_mail(destinataire, message):
 
     # Create a secure SSL context
     context = ssl.create_default_context()
-
-    # compte mail
-    adresse = "lapetitecuillere69@gmail.com"
-    mot_de_passe = input("---mot de passe de la boite mail?--->")
 
     with smtplib.SMTP_SSL("smtp.gmail.com", port, context=context) as server:
         server.login(adresse, mot_de_passe)
