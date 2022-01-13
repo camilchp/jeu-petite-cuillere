@@ -3,10 +3,15 @@ import imaplib
 from email import message_from_bytes
 import re
 import smtplib, ssl
+from pathlib import Path
+
+jeu = Path("Jeu")
+joueurs_en_vie = jeu / "joueurs_en_vie.csv"
+historique = jeu / "historique.txt"
 
 def main():
     tueurs = cree_liste_tueurs()
-    with open("joueurs_en_vie.txt", "r") as f:
+    with joueurs_en_vie.open("r") as f:
         T = f.readlines()
         n = len(T)
         joueurs = [T[i].split(',')[-1].strip() for i in range(n)]
@@ -36,10 +41,10 @@ def main():
             ================================================================
             """)
             message_victoire(T[0])
-    with open("joueurs_en_vie.txt", "w") as f:
+    with joueurs_en_vie.open("w") as f:
         for line in T:
             f.write(line)
-    with open("historique.txt", "a") as f:
+    with historique.open("a") as f:
         f.write(f"-------------{date.today()}-------------\n")
         for tueur in tueurs:
             f.write(tueur + "\n")
