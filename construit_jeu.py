@@ -12,10 +12,10 @@ def main():
 
     jeu = Path('jeu')
     jeu.mkdir()
-    # TODO: creer un fichier Jeu pour séparer les txt des scripts (utiliser "path" pour rester system-agnostic)
 
     with (jeu / "joueurs.csv").open(mode="w+") as f:
         for line in T:
+            line = ",".join([texte.strip().strip('''"''') for texte in line.split(",")[1::]]) + "\n" # convertit les lignes du csv d'un google forms en Nom,Prenom,Classe,Mail
             f.write(line)
 
     # Il semble que copier le premier fichier avec les bibliotheques standard est plus difficile que de le reecrire...
@@ -41,3 +41,5 @@ def verification_triche(T):
 
 if __name__ == "__main__" :
     main()
+    from mise_a_jour import envoyer_premier_mail
+    envoyer_premier_mail()

@@ -153,18 +153,32 @@ def jeu_fini():
 
 def message_mort(mort, tueur):
 
-    message = f"""\
+    message_mort = f"""\
 Subject: Décès
 
 
 Cher {mort.prenom} {mort.nom}, tu as été tué par {tueur.prenom} {tueur.nom}, en {tueur.classe}, bien joué !
 
 
-PS: Si ceci est une erreur, envoie un mail à cette adresse dont l'objet contient le mot "ERREUR" !"""
+PS: En cas d'erreur quelconque, envoie un mail à cette adresse dont l'objet contient le mot "ERREUR" !"""
 
-    envoyer_mail(mort.mail, message)
+    envoyer_mail(mort.mail, message_mort)
 
     print(f"mail de mort envoyé à {mort.mail}")
+
+    victime = tueur.cible()
+    message_tueur = f"""\
+Subject: Elimination
+
+
+Cher {tueur.prenom} {mort.nom}, aprés avoir tué {mort.prenom} {mort.nom}, tu dois à présent éliminer {victime.prenom} {victime.nom} en {victime.classe}.
+
+PS: En cas d'erreur quelconque, envoie un mail à cette adresse dont l'objet contient le mot "ERREUR" !
+"""
+
+    envoyer_mail(tueur.mail, message_tueur)
+
+    print(f"mail elimination envoyé à {tueur.mail}")
 
 def message_victoire(gagnant):
 
@@ -181,6 +195,41 @@ Félicitations !"""
     envoyer_mail(gagnant.mail, message)
 
     print(f"message de victoire envoye a {gagnant.mail}")
+
+def envoyer_premier_mail():
+    n = 0
+    for joueur in JOUEURS:
+        cible = joueur.cible()
+        message = f"""\
+Subject: Début du jeu !
+
+Bonsoir {joueur.prenom} {joueur.nom} de {joueur.classe},
+
+Le jeu démarre demain, et ta cible est {cible.prenom} {cible.nom}, en {cible.classe}.
+
+IMPORTANT : pour notifier une élimination, envoyer à cette adresse un unique mail contenat le mot "MORT" dans l'objet, le plus tôt possible après l'élimination.
+(Ce mail doit être envoyé dans la journée de l'élimination, la prochaine cible sera alors communiquée par mail.)
+
+Lorsque vous vous faites éliminer, n'oubliez pas de communiquer votre cible à votre assasin afin de fluidifier le jeu. Il est possible d'effectuer plusieurs élimination dans la même journée. 
+
+Pour rappel :
+
+Tu dois éliminer ta cible en la touchant avec une petite cuillère, quelqu'un d'autre cherche également à t'éliminer. Un joueur qui brandit une cuillère devant lui est inataquable.
+L'élimination d'une cible est interdite dans les lieux suivants :
+- les escaliers
+- sa chambre personnelle (si iel est à l'internat)
+- le self
+- la queue du self
+- les bâtiments de cours (pour le bâtiment B, à partir du premier étage)
+- la salle G024
+- la salle des profs, qui est de toute façon réservée aux enseignants
+
+PS: En cas d'erreur quelconque, envoie un mail à cette adresse dont l'objet contient le mot "ERREUR" !
+"""
+        envoyer_mail(joueur.mail, message)
+        print(f"premier mail envoyé à {joueur.mail}")
+        n+=1
+    print(f"\npremier mail envoyé à {n} joueurs en tout")
 
 if __name__ == "__main__":
     main()
