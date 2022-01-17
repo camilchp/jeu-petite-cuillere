@@ -14,7 +14,7 @@ def main():
     jeu.mkdir()
     # TODO: creer un fichier Jeu pour séparer les txt des scripts (utiliser "path" pour rester system-agnostic)
 
-    with (jeu / "joueurs_en_vie.csv").open(mode="w+") as f:
+    with (jeu / "joueurs.csv").open(mode="w+") as f:
         for line in T:
             f.write(line)
 

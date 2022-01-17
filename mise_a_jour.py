@@ -5,10 +5,57 @@ import re
 import smtplib, ssl
 from pathlib import Path
 from getpass import getpass
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 
 jeu = Path("Jeu")
-joueurs_en_vie = jeu / "joueurs_en_vie.csv"
+joueurs = jeu / "joueurs.csv"
 historique = jeu / "historique.txt"
+
+with joueurs.open("r") as f:
+    CSV = f.readlines()
+    N = len(CSV)
+
+class Joueur(): # T est la liste des joueurs, i est l'indice du joueur dans cette lise
+
+    def __init__(self, i):
+        self.indice = i
+        ligne = CSV[i].split(',')
+
+        self.nom = ligne[0].strip().capitalize()
+        self.prenom = ligne[1].strip().capitalize()
+        self.classe = ligne[2]
+        self.mail = ligne[3].strip()
+        self.est_mort = ligne[-1].strip() == "mort"
+
+    def meurt(self):
+        CSV[self.indice] = CSV[self.indice].strip() + ",     mort\n"
+        self.est_mort = True
+
+    def cible(self):
+        suivant = JOUEURS[(self.indice + 1) % N]
+        if not suivant.est_mort:
+            return suivant
+        else:
+            return suivant.cible()  # Un overflow ici doit signifier qu'il n'y a plus qu'un joueur en vie
+
+    def tue(self):
+        
+        victime = self.cible()
+        victime.meurt()
+        return victime
+
+
+JOUEURS = [Joueur(i) for i in range(N)]
 
 # compte mail
 try:
@@ -18,54 +65,35 @@ except:
     mot_de_passe = getpass("---mot de passe de la boite mail ?--->")
 
 def main():
+
     tueurs = cree_liste_tueurs()
-    with joueurs_en_vie.open("r") as f:
-        T = f.readlines()
-        n = len(T)
-        joueurs = [T[i].split(',')[-1].strip() for i in range(n)]
-        for tueur in tueurs:
-            assert tueur in joueurs # Verifie que les tueurs sont toujours en jeu
-        for tueur in tueurs:
-            i = joueurs.index(tueur)  # TODO : un tueur mort le jour de son crime peut causer une erreur suivant l'heure d'arrivée des mails 
-            ligne_tueur = T[i]
-            ligne_mort = T[(i+1)%n]
-            T.pop((i+1)%n)
-            joueurs.pop((i+1)%n)
-            n -= 1
-            message_mort(ligne_mort, ligne_tueur)
-        if len(T) == 1:
-            print(f"""
-            ================================================================
-            ================================================================
-            ================================================================
+    for tueur in tueurs:
+        victime = tueur.tue()
+        message_mort(victime, tueur)
 
-                                LE JEU EST TERMINE !!!
-
-                                un message a été envoyé
-                                     au gagnant !
-
-            ================================================================
-            ================================================================
-            ================================================================
-            """)
-            message_victoire(T[0])
-    with joueurs_en_vie.open("w") as f:
-        for line in T:
+    gagnant = jeu_fini()
+    if  gagnant:
+        print(f"\n============= le jeu est terminé ! ===========\n")
+        message_victoire(gagnant)
+    
+    with joueurs.open("w") as f:
+        for line in CSV:
             f.write(line)
     with historique.open("a") as f:
         f.write(f"-------------{date.today()}-------------\n")
         for tueur in tueurs:
-            f.write(tueur + "\n")
+            f.write("{tueur.mail} : {tueur.prenom} {tueur.nom} en {tueur.classe}")
 
 #--------------------------------------------------------------------------------------------------------------------
 def cree_liste_tueurs(): # TODO : envoyer un mail à tout les joueurs lors d'un triple kill , quintuple kill... ex "Archibald Haddock is on a killing spree !"
+    
     # cree une classe IMAP4 avec SSL 
     imap = imaplib.IMAP4_SSL("imap.gmail.com")
     # authentification
     imap.login(adresse, mot_de_passe)
-    imap.select('INBOX') # Pour debuger, ajouter en argument readonly=True, le script ne markera pas les messages comme lus à chaque execution
+    imap.select('INBOX', readonly=True) # Pour debuger, ajouter en argument readonly=True, le script ne markera pas les messages comme lus à chaque execution
     (retcode, messages) = imap.uid('SEARCH', None, '(UNSEEN)')
-    tueurs = []
+    mails_tueurs = []
     nb_mails_non_lus = 0
     nb_morts = 0
     if retcode == 'OK':
@@ -78,14 +106,31 @@ def cree_liste_tueurs(): # TODO : envoyer un mail à tout les joueurs lors d'un 
                     if re.search(r'm+o+r+t+', original['Subject'], re.IGNORECASE):
                         nb_morts += 1
                         mail_tueur = re.search('<(.*)>', original['From']).group(1)
-                        tueurs.append(mail_tueur)
+                        mails_tueurs.append(mail_tueur)
     else:
-        print("erreur de connexion")
-                        
-    print(f"{nb_mails_non_lus} nouveaux mails recus, dont {nb_morts} morts")
-    print("tueurs = ", tueurs, "(doublons => plusieurs kills... la classe !)")
+        print(f"{bcolors.WARNING}erreur de connexion à la boite mail{bcolors.ENDC}")
+
+                 
+    print(f'''
+
+    * {bcolors.OKGREEN}{bcolors.BOLD}connexion à la boite mail réussie{bcolors.ENDC}
+    * {bcolors.BOLD}{nb_mails_non_lus}{bcolors.ENDC} nouveaux mails recus, dont {bcolors.BOLD}{nb_morts}{bcolors.ENDC} morts
+    * tueurs =  {mails_tueurs}
+
+    ''')
     imap.close()
     imap.logout()
+
+    # On a récupéré une liste des mails des tueurs
+
+    mails_joueurs = [j.mail for j in JOUEURS if not j.est_mort]
+    tueurs = []
+    for adr in mails_tueurs:
+        if adr in mails_joueurs:
+            i = mails_joueurs.index(adr)
+            tueurs.append(JOUEURS[i])
+        else:
+            print(f"ATTENTION : {adr} a envoyé {mails_tueurs.count(adr)} mail(s) intitulé mort, mais n'est pas parmis les joueurs vivants !")
 
     return tueurs
 
@@ -99,43 +144,43 @@ def envoyer_mail(destinataire, message):
         server.login(adresse, mot_de_passe)
         server.sendmail(adresse, destinataire, message.encode("utf8"))
 
-def message_mort(ligne_mort, ligne_tueur):
-    mort = ligne_mort.split(',')
-    tueur = ligne_tueur.split(',')
+def jeu_fini():
+    en_vie = [j for j in JOUEURS if not j.est_mort]
+    if len(en_vie) == 1:
+        return en_vie[0]
+    else:
+        return None
 
-    mail_mort = mort[-1].strip()
+def message_mort(mort, tueur):
 
     message = f"""\
 Subject: Décès
 
 
-Cher {mort[1]} {mort[0]}, tu as été tué par {tueur[1]} {tueur[0]}, en {tueur[2]}, bien joué !
+Cher {mort.prenom} {mort.nom}, tu as été tué par {tueur.prenom} {tueur.nom}, en {tueur.classe}, bien joué !
 
 
 PS: Si ceci est une erreur, envoie un mail à cette adresse dont l'objet contient le mot "ERREUR" !"""
 
-    envoyer_mail(mail_mort, message)
+    #envoyer_mail(mort.mail, message)
 
-    print(f"mail de mort envoyé à {mail_mort}")
+    print(f"mail de mort envoyé à {mort.mail}")
 
-def message_victoire(ligne_gagnant):
-    gagnant = ligne_gagnant.split(',')
-
-    mail_gagnant = gagnant[-1].strip()
+def message_victoire(gagnant):
 
     message = f"""\
 Subject: Victoire !
 
 
-Cher {gagnant[1]} {gagnant[0]},
+Cher {gagnant.prenom} {gagnant.nom},
 
-Aujourd'hui, tu es la fierté des {gagnant[2]} ! Tu as remporté le grand jeu de la petite cuillère de la Martinière Monplaisir !
+Aujourd'hui, tu es la fierté des {gagnant.classe} ! Tu as remporté le grand jeu de la petite cuillère de la Martinière Monplaisir !
 
 Félicitations !"""
 
-    envoyer_mail(mail_gagnant, message)
+    envoyer_mail(gagnant.mail, message)
 
-    print(f"message de victoire envoye a {mail_gagnant}")
+    print(f"message de victoire envoye a {gagnant.mail}")
 
 if __name__ == "__main__":
     main()
