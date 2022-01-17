@@ -162,7 +162,7 @@ Cher {mort.prenom} {mort.nom}, tu as été tué par {tueur.prenom} {tueur.nom}, 
 
 PS: Si ceci est une erreur, envoie un mail à cette adresse dont l'objet contient le mot "ERREUR" !"""
 
-    #envoyer_mail(mort.mail, message)
+    envoyer_mail(mort.mail, message)
 
     print(f"mail de mort envoyé à {mort.mail}")
 
