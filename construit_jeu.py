@@ -21,6 +21,7 @@ def main():
     # Il semble que copier le premier fichier avec les bibliotheques standard est plus difficile que de le reecrire...
     with (jeu / "situation_initiale.csv").open(mode="w+") as f:
         for line in T:
+            line = ",".join([texte.strip().strip('''"''') for texte in line.split(",")[1::]]) + "\n" # convertit les lignes du csv d'un google forms en Nom,Prenom,Classe,Mail
             f.write(line)
 
     with (jeu / "historique.txt").open(mode="w+") as f:

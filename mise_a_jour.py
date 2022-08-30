@@ -1,3 +1,4 @@
+#!/usr/local/bin/python3
 from datetime import date
 import imaplib
 from email import message_from_bytes
@@ -25,7 +26,7 @@ with joueurs.open("r") as f:
     CSV = f.readlines()
     N = len(CSV)
 
-class Joueur(): # T est la liste des joueurs, i est l'indice du joueur dans cette lise
+class Joueur(): # csv est la liste des joueurs, i est l'indice du joueur dans cette liste
 
     def __init__(self, i):
         self.indice = i
@@ -67,9 +68,16 @@ except:
 def main():
 
     tueurs = cree_liste_tueurs()
-    for tueur in tueurs:
-        victime = tueur.tue()
-        message_mort(victime, tueur)
+
+    with historique.open("a") as f:
+        f.write(f"-------------{date.today()}-------------\n")
+        for tueur in tueurs:
+            victime = tueur.tue()
+            message_mort(victime, tueur)
+            f.write(f"{tueur.mail}, {tueur.prenom} {tueur.nom} en {tueur.classe} a tué {victime.prenom} {victime.nom} en {victime.classe} ,{victime.mail}\n")
+        
+        for tueur in set(tueurs):
+            mail_global_multikill(tueur, tueurs.count(tueur))
 
     gagnant = jeu_fini()
     if  gagnant:
@@ -79,19 +87,17 @@ def main():
     with joueurs.open("w") as f:
         for line in CSV:
             f.write(line)
-    with historique.open("a") as f:
-        f.write(f"-------------{date.today()}-------------\n")
-        for tueur in tueurs:
-            f.write("{tueur.mail} : {tueur.prenom} {tueur.nom} en {tueur.classe}")
 
 #--------------------------------------------------------------------------------------------------------------------
 def cree_liste_tueurs(): # TODO : envoyer un mail à tout les joueurs lors d'un triple kill , quintuple kill... ex "Archibald Haddock is on a killing spree !"
     
-    # cree une classe IMAP4 avec SSL 
+    # TODO: constrctive error message
+    # cree une classe IMAP4 avec SSL
+    # Sous mac, une erreur "nodename nor servname provided, or not known" peut éventuellement se résoudre avec la commande : sudo killall -HUP mDNSResponder (ou en allumant le WiFi...)
     imap = imaplib.IMAP4_SSL("imap.gmail.com")
     # authentification
     imap.login(adresse, mot_de_passe)
-    imap.select('INBOX', readonly=True) # Pour debuger, ajouter en argument readonly=True, le script ne markera pas les messages comme lus à chaque execution
+    imap.select('INBOX') # Pour debuger, ajouter en argument readonly=True, le script ne markera pas les messages comme lus à chaque execution
     (retcode, messages) = imap.uid('SEARCH', None, '(UNSEEN)')
     mails_tueurs = []
     nb_mails_non_lus = 0
@@ -105,7 +111,10 @@ def cree_liste_tueurs(): # TODO : envoyer un mail à tout les joueurs lors d'un 
                     original = message_from_bytes(response_part[1])
                     if re.search(r'm+o+r+t+', original['Subject'], re.IGNORECASE):
                         nb_morts += 1
-                        mail_tueur = re.search('<(.*)>', original['From']).group(1)
+                        try:
+                            mail_tueur = re.search('<(.*)>', original['From']).group(1)
+                        except AttributeError:
+                            mail_tueur = original['From'].strip()
                         mails_tueurs.append(mail_tueur)
     else:
         print(f"{bcolors.WARNING}erreur de connexion à la boite mail{bcolors.ENDC}")
@@ -123,10 +132,11 @@ def cree_liste_tueurs(): # TODO : envoyer un mail à tout les joueurs lors d'un 
 
     # On a récupéré une liste des mails des tueurs
 
-    mails_joueurs = [j.mail for j in JOUEURS if not j.est_mort]
+    mails_joueurs = [j.mail for j in JOUEURS]
+    mails_joueurs_en_vie = [j.mail for j in JOUEURS if not j.est_mort]
     tueurs = []
     for adr in mails_tueurs:
-        if adr in mails_joueurs:
+        if adr in mails_joueurs_en_vie:
             i = mails_joueurs.index(adr)
             tueurs.append(JOUEURS[i])
         else:
@@ -137,7 +147,7 @@ def cree_liste_tueurs(): # TODO : envoyer un mail à tout les joueurs lors d'un 
 def envoyer_mail(destinataire, message):
     port = 465  # For SSL
 
-    # Create a secure SSL context
+    # Creation d'un contexte SSL (sécurisé)
     context = ssl.create_default_context()
 
     with smtplib.SMTP_SSL("smtp.gmail.com", port, context=context) as server:
@@ -171,14 +181,14 @@ PS: En cas d'erreur quelconque, envoie un mail à cette adresse dont l'objet con
 Subject: Elimination
 
 
-Cher {tueur.prenom} {mort.nom}, aprés avoir tué {mort.prenom} {mort.nom}, tu dois à présent éliminer {victime.prenom} {victime.nom} en {victime.classe}.
+Cher {tueur.prenom} {tueur.nom}, aprés avoir tué {mort.prenom} {mort.nom}, tu dois à présent éliminer {victime.prenom} {victime.nom} en {victime.classe}.
 
 PS: En cas d'erreur quelconque, envoie un mail à cette adresse dont l'objet contient le mot "ERREUR" !
 """
 
     envoyer_mail(tueur.mail, message_tueur)
 
-    print(f"mail elimination envoyé à {tueur.mail}")
+    print(f"mail elimination envoyé à {tueur.mail}\n")
 
 def message_victoire(gagnant):
 
@@ -230,6 +240,33 @@ PS: En cas d'erreur quelconque, envoie un mail à cette adresse dont l'objet con
         print(f"premier mail envoyé à {joueur.mail}")
         n+=1
     print(f"\npremier mail envoyé à {n} joueurs en tout")
+
+def mail_global_multikill(tueur, nb_eliminations):
+
+    if nb_eliminations < 3:
+        return None
+
+    def multi(n):
+        if n == 3:
+            return "Triple kill !"
+        elif n == 4:
+            return "Quadruple kill !"
+        elif n == 5:
+            return "PENTAKILL !"
+        elif n >= 6:
+            return "KILLING SPREE !"
+
+    message = f"""\
+Subject: Multikill !
+
+Aujourd'hui, {tueur.prenom} {tueur.nom} de {tueur.classe} a éliminé {nb_eliminations} personnes !
+
+{multi(nb_eliminations)}
+
+Faites bien attention à vous...
+"""
+    envoyer_mail([j.mail for j in JOUEURS if not j.est_mort], message)
+    print(f"Un message global a été envoyé, car {tueur.prenom} {tueur.nom} a fait {nb_eliminations} kills !\n")
 
 if __name__ == "__main__":
     main()
