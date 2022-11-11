@@ -6,6 +6,8 @@ import re
 import smtplib, ssl
 from pathlib import Path
 from getpass import getpass
+
+
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -50,13 +52,12 @@ class Joueur(): # csv est la liste des joueurs, i est l'indice du joueur dans ce
             return suivant.cible()  # Un overflow ici doit signifier qu'il n'y a plus qu'un joueur en vie
 
     def tue(self):
-        
         victime = self.cible()
         victime.meurt()
         return victime
 
-
 JOUEURS = [Joueur(i) for i in range(N)]
+
 
 # compte mail
 try:
@@ -81,7 +82,7 @@ def main():
 
     gagnant = jeu_fini()
     if  gagnant:
-        print(f"\n============= le jeu est terminé ! ===========\n")
+        print(f"\n============= Le Jeu est Terminé ! ===========\n")
         message_victoire(gagnant)
     
     with joueurs.open("w") as f:
@@ -89,15 +90,11 @@ def main():
             f.write(line)
 
 #--------------------------------------------------------------------------------------------------------------------
-def cree_liste_tueurs(): # TODO : envoyer un mail à tout les joueurs lors d'un triple kill , quintuple kill... ex "Archibald Haddock is on a killing spree !"
-    
-    # TODO: constrctive error message
-    # cree une classe IMAP4 avec SSL
-    # Sous mac, une erreur "nodename nor servname provided, or not known" peut éventuellement se résoudre avec la commande : sudo killall -HUP mDNSResponder (ou en allumant le WiFi...)
-    imap = imaplib.IMAP4_SSL("imap.gmail.com")
+def cree_liste_tueurs():
+    imap = imaplib.IMAP4_SSL("imap.zoho.eu")
     # authentification
     imap.login(adresse, mot_de_passe)
-    imap.select('INBOX') # Pour debuger, ajouter en argument readonly=True, le script ne markera pas les messages comme lus à chaque execution
+    imap.select('INBOX', readonly = False) # Pour debuger, passer readonly à True, le script ne devrait pas marquer pas les messages comme lus à chaque execution
     (retcode, messages) = imap.uid('SEARCH', None, '(UNSEEN)')
     mails_tueurs = []
     nb_mails_non_lus = 0
@@ -109,6 +106,11 @@ def cree_liste_tueurs(): # TODO : envoyer un mail à tout les joueurs lors d'un 
             for response_part in data:
                 if isinstance(response_part, tuple):
                     original = message_from_bytes(response_part[1])
+
+                    if re.search(r'e+r+r+e+u+r', original['Subject'], re.IGNORECASE):
+                        print("Il y a eu une erreur")
+                        break
+
                     if re.search(r'm+o+r+t+', original['Subject'], re.IGNORECASE):
                         nb_morts += 1
                         try:
@@ -117,12 +119,12 @@ def cree_liste_tueurs(): # TODO : envoyer un mail à tout les joueurs lors d'un 
                             mail_tueur = original['From'].strip()
                         mails_tueurs.append(mail_tueur)
     else:
-        print(f"{bcolors.WARNING}erreur de connexion à la boite mail{bcolors.ENDC}")
+        print(f"{bcolors.WARNING}Erreur de Connexion à la Boîte Mail{bcolors.ENDC}")
 
-                 
+
     print(f'''
 
-    * {bcolors.OKGREEN}{bcolors.BOLD}connexion à la boite mail réussie{bcolors.ENDC}
+    * {bcolors.OKGREEN}{bcolors.BOLD}Connexion à la Boîte Mail Réussie{bcolors.ENDC}
     * {bcolors.BOLD}{nb_mails_non_lus}{bcolors.ENDC} nouveaux mails recus, dont {bcolors.BOLD}{nb_morts}{bcolors.ENDC} morts
     * tueurs =  {mails_tueurs}
 
@@ -144,15 +146,17 @@ def cree_liste_tueurs(): # TODO : envoyer un mail à tout les joueurs lors d'un 
 
     return tueurs
 
+
 def envoyer_mail(destinataire, message):
     port = 465  # For SSL
 
     # Creation d'un contexte SSL (sécurisé)
     context = ssl.create_default_context()
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", port, context=context) as server:
+    with smtplib.SMTP_SSL("smtp.zoho.eu", port, context=context) as server:
         server.login(adresse, mot_de_passe)
         server.sendmail(adresse, destinataire, message.encode("utf8"))
+
 
 def jeu_fini():
     en_vie = [j for j in JOUEURS if not j.est_mort]
@@ -161,8 +165,8 @@ def jeu_fini():
     else:
         return None
 
-def message_mort(mort, tueur):
 
+def message_mort(mort, tueur):
     message_mort = f"""\
 Subject: Décès
 
@@ -190,8 +194,8 @@ PS: En cas d'erreur quelconque, envoie un mail à cette adresse dont l'objet con
 
     print(f"mail elimination envoyé à {tueur.mail}\n")
 
-def message_victoire(gagnant):
 
+def message_victoire(gagnant):
     message = f"""\
 Subject: Victoire !
 
@@ -206,6 +210,7 @@ Félicitations !"""
 
     print(f"message de victoire envoye a {gagnant.mail}")
 
+
 def envoyer_premier_mail():
     n = 0
     for joueur in JOUEURS:
@@ -217,7 +222,7 @@ Bonsoir {joueur.prenom} {joueur.nom} de {joueur.classe},
 
 Le jeu démarre demain, et ta cible est {cible.prenom} {cible.nom}, en {cible.classe}.
 
-IMPORTANT : pour notifier une élimination, envoyer à cette adresse un unique mail contenat le mot "MORT" dans l'objet, le plus tôt possible après l'élimination.
+IMPORTANT : Pour notifier une élimination, le TUEUR doit envoyer à cette adresse un UNIQUE mail contenant le mot "MORT" dans l'objet, le plus tôt possible après l'élimination.
 (Ce mail doit être envoyé dans la journée de l'élimination, la prochaine cible sera alors communiquée par mail.)
 
 Lorsque vous vous faites éliminer, n'oubliez pas de communiquer votre cible à votre assasin afin de fluidifier le jeu. Il est possible d'effectuer plusieurs élimination dans la même journée. 
@@ -234,12 +239,15 @@ L'élimination d'une cible est interdite dans les lieux suivants :
 - la salle G024
 - la salle des profs, qui est de toute façon réservée aux enseignants
 
+Bonne Chance, tu en auras besoin...
+
 PS: En cas d'erreur quelconque, envoie un mail à cette adresse dont l'objet contient le mot "ERREUR" !
 """
         envoyer_mail(joueur.mail, message)
         print(f"premier mail envoyé à {joueur.mail}")
         n+=1
     print(f"\npremier mail envoyé à {n} joueurs en tout")
+
 
 def mail_global_multikill(tueur, nb_eliminations):
 
@@ -267,6 +275,7 @@ Faites bien attention à vous...
 """
     envoyer_mail([j.mail for j in JOUEURS if not j.est_mort], message)
     print(f"Un message global a été envoyé, car {tueur.prenom} {tueur.nom} a fait {nb_eliminations} kills !\n")
+
 
 if __name__ == "__main__":
     main()

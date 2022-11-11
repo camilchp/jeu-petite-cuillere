@@ -2,23 +2,24 @@ from random import shuffle
 from pathlib import Path
 
 def main():
-    with open("reponses.csv", "r") as f:
+    with open("reponses.csv", "r") as f: # le fichier reponses.csv peut être celui des réponses d'un Google Forms
         f.readline()
         T = f.readlines()
         T[-1] += "\n"
-        shuffle(T)
-    
-    verification_triche(T)
+        shuffle(T) # Permet de définir de manière aléatoire les cibles des joueurs les uns les autres
+
+    verification_erreur(T) # Vérifie qu'aucun joueur n'est inscrit 2 fois
 
     jeu = Path('jeu')
     jeu.mkdir()
 
     with (jeu / "joueurs.csv").open(mode="w+") as f:
         for line in T:
-            line = ",".join([texte.strip().strip('''"''') for texte in line.split(",")[1::]]) + "\n" # convertit les lignes du csv d'un google forms en Nom,Prenom,Classe,Mail
+            line = ",".join([texte.strip().strip('''"''') for texte in line.split(",")[1::]]) + "\n"
+            # convertit les lignes du csv d'un google forms en Nom,Prenom,Classe,Mail
             f.write(line)
 
-    # Il semble que copier le premier fichier avec les bibliotheques standard est plus difficile que de le reecrire...
+    # Il semble que copier le premier fichier avec les bibliothèques standard est plus difficile que de le réécrire...
     with (jeu / "situation_initiale.csv").open(mode="w+") as f:
         for line in T:
             line = ",".join([texte.strip().strip('''"''') for texte in line.split(",")[1::]]) + "\n" # convertit les lignes du csv d'un google forms en Nom,Prenom,Classe,Mail
@@ -27,7 +28,7 @@ def main():
     with (jeu / "historique.txt").open(mode="w+") as f:
         pass
 
-def verification_triche(T):
+def verification_erreur(T): # Vérifie qu'aucun joueur n'est inscrit deux fois
     T_split = [ligne.split(',') for ligne in T]
 
     mails = [ligne[-1].strip() for ligne in T_split]
