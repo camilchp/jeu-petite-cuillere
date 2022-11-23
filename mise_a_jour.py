@@ -28,7 +28,8 @@ with joueurs.open("r") as f:
     CSV = f.readlines()
     N = len(CSV)
 
-class Joueur(): # csv est la liste des joueurs, i est l'indice du joueur dans cette liste
+
+class Joueur():  # csv est la liste des joueurs, i est l'indice du joueur dans cette liste
 
     def __init__(self, i):
         self.indice = i
@@ -56,8 +57,8 @@ class Joueur(): # csv est la liste des joueurs, i est l'indice du joueur dans ce
         victime.meurt()
         return victime
 
-JOUEURS = [Joueur(i) for i in range(N)]
 
+JOUEURS = [Joueur(i) for i in range(N)]
 
 # compte mail
 try:
@@ -65,6 +66,7 @@ try:
 except:
     adresse = input("---adresse mail ?--->")
     mot_de_passe = getpass("---mot de passe de la boite mail ?--->")
+
 
 def main():
 
@@ -76,31 +78,33 @@ def main():
             victime = tueur.tue()
             message_mort(victime, tueur)
             f.write(f"{tueur.mail}, {tueur.prenom} {tueur.nom} en {tueur.classe} a tué {victime.prenom} {victime.nom} en {victime.classe} ,{victime.mail}\n")
-        
+
         for tueur in set(tueurs):
             mail_global_multikill(tueur, tueurs.count(tueur))
 
     gagnant = jeu_fini()
-    if  gagnant:
+    if gagnant:
         print(f"\n============= Le Jeu est Terminé ! ===========\n")
         message_victoire(gagnant)
-    
+
     with joueurs.open("w") as f:
         for line in CSV:
             f.write(line)
 
-#--------------------------------------------------------------------------------------------------------------------
+
+# --------------------------------------------------------------------------------------------------------------------
 def cree_liste_tueurs():
     imap = imaplib.IMAP4_SSL("imap.zoho.eu")
     # authentification
     imap.login(adresse, mot_de_passe)
-    imap.select('INBOX', readonly = False) # Pour debuger, passer readonly à True, le script ne devrait pas marquer pas les messages comme lus à chaque execution
+    imap.select('INBOX', readonly = False)  # Pour debugger, passer readonly à True, le script ne devrait pas marquer
+    # pas les messages comme lus à chaque execution
     (retcode, messages) = imap.uid('SEARCH', None, '(UNSEEN)')
     mails_tueurs = []
     nb_mails_non_lus = 0
     nb_morts = 0
     if retcode == 'OK':
-        for num in messages[0].split() :
+        for num in messages[0].split():
             typ, data = imap.uid('FETCH', num, '(RFC822)')
             nb_mails_non_lus += 1
             for response_part in data:
@@ -118,9 +122,20 @@ def cree_liste_tueurs():
                         except AttributeError:
                             mail_tueur = original['From'].strip()
                         mails_tueurs.append(mail_tueur)
+
+        for num in messages[0].split():
+            msg = message_from_bytes((data[0][1]))
+            # MOVE MESSAGE TO ProcessedEmails FOLDER
+            result = imap.uid("COPY", num, "Jeu_2022-2023")
+            print(result)
+            if result[0] == 'OK':
+                mov, data = imap.uid('STORE', num, '+FLAGS', '(\Deleted)')
+            else :
+                break
+        imap.expunge()
+
     else:
         print(f"{bcolors.WARNING}Erreur de Connexion à la Boîte Mail{bcolors.ENDC}")
-
 
     print(f'''
 
@@ -153,7 +168,7 @@ def envoyer_mail(destinataire, message):
     # Creation d'un contexte SSL (sécurisé)
     context = ssl.create_default_context()
 
-    with smtplib.SMTP_SSL("smtp.zoho.eu", port, context=context) as server:
+    with smtplib.SMTP_SSL("smtp.zoho.eu", port, context = context) as server:
         server.login(adresse, mot_de_passe)
         server.sendmail(adresse, destinataire, message.encode("utf8"))
 
@@ -225,11 +240,11 @@ Le jeu démarre demain, et ta cible est {cible.prenom} {cible.nom}, en {cible.cl
 IMPORTANT : Pour notifier une élimination, le TUEUR doit envoyer à cette adresse un UNIQUE mail contenant le mot "MORT" dans l'objet, le plus tôt possible après l'élimination.
 (Ce mail doit être envoyé dans la journée de l'élimination, la prochaine cible sera alors communiquée par mail.)
 
-Lorsque vous vous faites éliminer, n'oubliez pas de communiquer votre cible à votre assasin afin de fluidifier le jeu. Il est possible d'effectuer plusieurs élimination dans la même journée. 
+Lorsque vous vous faites éliminer, n'oubliez pas de communiquer votre cible à votre assasin afin de fluidifier le jeu. Il est possible d'effectuer plusieurs éliminations dans la même journée. 
 
 Pour rappel :
 
-Tu dois éliminer ta cible en la touchant avec une petite cuillère, quelqu'un d'autre cherche également à t'éliminer. Un joueur qui brandit une cuillère devant lui est inataquable.
+Tu dois éliminer ta cible en la touchant avec une petite cuillère, quelqu'un d'autre cherche également à t'éliminer. Un joueur qui brandit une cuillère devant lui est inattaquable.
 L'élimination d'une cible est interdite dans les lieux suivants :
 - les escaliers
 - sa chambre personnelle (si iel est à l'internat)
@@ -237,7 +252,6 @@ L'élimination d'une cible est interdite dans les lieux suivants :
 - la queue du self
 - les bâtiments de cours (pour le bâtiment B, à partir du premier étage)
 - la salle G024
-- la salle des profs, qui est de toute façon réservée aux enseignants
 
 Bonne Chance, tu en auras besoin...
 
@@ -245,12 +259,11 @@ PS: En cas d'erreur quelconque, envoie un mail à cette adresse dont l'objet con
 """
         envoyer_mail(joueur.mail, message)
         print(f"premier mail envoyé à {joueur.mail}")
-        n+=1
+        n += 1
     print(f"\npremier mail envoyé à {n} joueurs en tout")
 
 
 def mail_global_multikill(tueur, nb_eliminations):
-
     if nb_eliminations < 3:
         return None
 
