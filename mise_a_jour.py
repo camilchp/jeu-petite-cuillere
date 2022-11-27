@@ -6,6 +6,7 @@ import re
 import smtplib, ssl
 from pathlib import Path
 from getpass import getpass
+import time
 
 
 class bcolors:
@@ -18,6 +19,7 @@ class bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+    CARERED = '\033[33m'
 
 
 jeu = Path("Jeu")
@@ -92,7 +94,6 @@ def main():
             f.write(line)
 
 
-# --------------------------------------------------------------------------------------------------------------------
 def cree_liste_tueurs():
     imap = imaplib.IMAP4_SSL("imap.zoho.eu")
     # authentification
@@ -132,7 +133,10 @@ def cree_liste_tueurs():
                 mov, data = imap.uid('STORE', num, '+FLAGS', '(\Deleted)')
             else :
                 break
-        imap.expunge()
+        if input("Tout est bon ?") == "y":
+            imap.expunge()
+        else :
+            exit()
 
     else:
         print(f"{bcolors.WARNING}Erreur de Connexion à la Boîte Mail{bcolors.ENDC}")
@@ -171,6 +175,8 @@ def envoyer_mail(destinataire, message):
     with smtplib.SMTP_SSL("smtp.zoho.eu", port, context = context) as server:
         server.login(adresse, mot_de_passe)
         server.sendmail(adresse, destinataire, message.encode("utf8"))
+        time.sleep(5)
+    
 
 
 def jeu_fini():

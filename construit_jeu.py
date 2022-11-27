@@ -43,5 +43,6 @@ def verification_erreur(T): # Vérifie qu'aucun joueur n'est inscrit deux fois
 
 if __name__ == "__main__" :
     main()
-    from mise_a_jour import envoyer_premier_mail
-    envoyer_premier_mail()
+    if input("Check si tout est bon") == "y" :
+        from mise_a_jour import envoyer_premier_mail
+        envoyer_premier_mail()
