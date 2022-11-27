@@ -175,8 +175,8 @@ def envoyer_mail(destinataire, message):
     with smtplib.SMTP_SSL("smtp.zoho.eu", port, context = context) as server:
         server.login(adresse, mot_de_passe)
         server.sendmail(adresse, destinataire, message.encode("utf8"))
-        time.sleep(5)
-    
+        time.sleep(60)
+
 
 
 def jeu_fini():
