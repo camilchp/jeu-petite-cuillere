@@ -1,4 +1,3 @@
-#!/usr/local/bin/python3
 from datetime import date
 import imaplib
 from email import message_from_bytes
@@ -7,7 +6,7 @@ import smtplib, ssl
 from pathlib import Path
 from getpass import getpass
 import time
-
+import stats
 
 class bcolors:
     HEADER = '\033[95m'
@@ -73,9 +72,15 @@ except:
 def main():
 
     tueurs = cree_liste_tueurs()
+    with historique.open("r") as f :
+        e = f.readlines()
+        r = "-------------{date.today()}-------------\n" in e
 
     with historique.open("a") as f:
-        f.write(f"-------------{date.today()}-------------\n")
+
+        if not r :
+            f.write(f"-------------{date.today()}-------------\n")
+
         for tueur in tueurs:
             victime = tueur.tue()
             message_mort(victime, tueur)
@@ -83,6 +88,8 @@ def main():
 
         for tueur in set(tueurs):
             mail_global_multikill(tueur, tueurs.count(tueur))
+
+    stats.main()
 
     gagnant = jeu_fini()
     if gagnant:
@@ -121,18 +128,18 @@ def cree_liste_tueurs():
                         try:
                             mail_tueur = re.search('<(.*)>', original['From']).group(1)
                         except AttributeError:
-                            mail_tueur = original['From'].strip()
+                            mail_tueur = original['From'].strip() # Ajoute dans mails_tueur l'ensemble des mails
+                            # ayant envoyé un message comportant "MORT" dans l'objet
                         mails_tueurs.append(mail_tueur)
-
-        for num in messages[0].split():
             msg = message_from_bytes((data[0][1]))
             # MOVE MESSAGE TO ProcessedEmails FOLDER
             result = imap.uid("COPY", num, "Jeu_2022-2023")
-            print(result)
+            print(result, mail_tueur)
             if result[0] == 'OK':
                 mov, data = imap.uid('STORE', num, '+FLAGS', '(\Deleted)')
             else :
                 break
+
         if input("Tout est bon ?") == "y":
             imap.expunge()
         else :
@@ -157,11 +164,12 @@ def cree_liste_tueurs():
     mails_joueurs_en_vie = [j.mail for j in JOUEURS if not j.est_mort]
     tueurs = []
     for adr in mails_tueurs:
-        if adr in mails_joueurs_en_vie:
-            i = mails_joueurs.index(adr)
+        a = adr.lower()
+        if a in mails_joueurs_en_vie:
+            i = mails_joueurs.index(a)
             tueurs.append(JOUEURS[i])
         else:
-            print(f"ATTENTION : {adr} a envoyé {mails_tueurs.count(adr)} mail(s) intitulé mort, mais n'est pas parmis les joueurs vivants !")
+            print(f"ATTENTION : {a} a envoyé {mails_tueurs.count(a)} mail(s) intitulé mort, mais n'est pas parmis les joueurs vivants !")
 
     return tueurs
 
@@ -175,7 +183,7 @@ def envoyer_mail(destinataire, message):
     with smtplib.SMTP_SSL("smtp.zoho.eu", port, context = context) as server:
         server.login(adresse, mot_de_passe)
         server.sendmail(adresse, destinataire, message.encode("utf8"))
-        time.sleep(60)
+        time.sleep(20)
 
 
 
