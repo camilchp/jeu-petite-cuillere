@@ -4,7 +4,7 @@ import re
 import numpy as np
 from datetime import date
 
-jeu = Path("Jeu")
+jeu = Path("jeu_2022_2023")
 joueurs = jeu / "joueurs.csv"
 historique = jeu / "historique.txt"
 
@@ -129,7 +129,7 @@ def main():  # Crée quelques graphiques.
     plt.title("Evolution du Nombre de Joueurs", size = "x-large")
     plt.savefig(jeu / "joueurs.png")
 
-    # Statistiques de chaque classe sur l'entièreté du jeu
+    # Statistiques de chaque classe sur l'entièreté du jeu_2022_2023
     promotion = {}
     for j in JOUEURS:
         if j.classe in promotion:

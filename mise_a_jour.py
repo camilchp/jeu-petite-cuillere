@@ -21,7 +21,7 @@ class bcolors:
     CARERED = '\033[33m'
 
 
-jeu = Path("Jeu")
+jeu = Path("jeu_2022_2023")
 joueurs = jeu / "joueurs.csv"
 historique = jeu / "historique.txt"
 
@@ -231,7 +231,7 @@ Subject: Victoire !
 
 Cher {gagnant.prenom} {gagnant.nom},
 
-Aujourd'hui, tu es la fierté des {gagnant.classe} ! Tu as remporté le grand jeu de la petite cuillère de la Martinière Monplaisir !
+Aujourd'hui, tu es la fierté des {gagnant.classe} ! Tu as remporté le grand jeu_2022_2023 de la petite cuillère de la Martinière Monplaisir !
 
 Félicitations !"""
 
@@ -245,16 +245,16 @@ def envoyer_premier_mail():
     for joueur in JOUEURS:
         cible = joueur.cible()
         message = f"""\
-Subject: Début du jeu !
+Subject: Début du jeu_2022_2023 !
 
 Bonsoir {joueur.prenom} {joueur.nom} de {joueur.classe},
 
-Le jeu démarre demain, et ta cible est {cible.prenom} {cible.nom}, en {cible.classe}.
+Le jeu_2022_2023 démarre demain, et ta cible est {cible.prenom} {cible.nom}, en {cible.classe}.
 
 IMPORTANT : Pour notifier une élimination, le TUEUR doit envoyer à cette adresse un UNIQUE mail contenant le mot "MORT" dans l'objet, le plus tôt possible après l'élimination.
 (Ce mail doit être envoyé dans la journée de l'élimination, la prochaine cible sera alors communiquée par mail.)
 
-Lorsque vous vous faites éliminer, n'oubliez pas de communiquer votre cible à votre assasin afin de fluidifier le jeu. Il est possible d'effectuer plusieurs éliminations dans la même journée. 
+Lorsque vous vous faites éliminer, n'oubliez pas de communiquer votre cible à votre assasin afin de fluidifier le jeu_2022_2023. Il est possible d'effectuer plusieurs éliminations dans la même journée. 
 
 Pour rappel :
 

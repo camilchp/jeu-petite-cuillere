@@ -10,7 +10,7 @@ def main():
 
     verification_erreur(T) # Vérifie qu'aucun joueur n'est inscrit 2 fois
 
-    jeu = Path('jeu')
+    jeu = Path('jeu_2022_2023')
     jeu.mkdir()
 
     with (jeu / "joueurs.csv").open(mode="w+") as f:

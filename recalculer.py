@@ -4,7 +4,7 @@ from pathlib import Path
 from mise_a_jour import Joueur
 from datetime import date
 
-jeu = Path("Jeu")
+jeu = Path("jeu_2022_2023")
 initial = jeu / "situation_initiale.csv"
 historique = jeu / "historique.txt"
 
