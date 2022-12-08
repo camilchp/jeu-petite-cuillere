@@ -46,8 +46,6 @@ JOUEURS = [Joueur(i) for i in range(N)]
 
 
 def main():  # Crée quelques graphiques.
-    nb_joueurs = {"2022-11-27": 95}
-
     p = {}
     for j in JOUEURS:
         p[j.mail] = {"2022-11-27": 0}
@@ -93,7 +91,6 @@ def main():  # Crée quelques graphiques.
                 p[mail][day[0]] = 0
 
         Kills[day[0]] = len(day) - 1
-        nb_joueurs[day[0]] = nb_joueurs[max(nb_joueurs.keys())] - Kills[day[0]]
 
     palmares = {}
     Artour = {}
@@ -111,7 +108,10 @@ def main():  # Crée quelques graphiques.
     # Plot des kills et des morts par jour
     days = list(Kills.keys())
     kills = list(Kills.values())
-    players = list(nb_joueurs.values())
+    players = [95]
+    for i in range(1, len(kills)):
+        players.append(players[-1]-kills[i])
+    print(players)
 
     plt.clf()
     plt.figure().patch.set_facecolor('#978a84')
@@ -143,21 +143,20 @@ def main():  # Crée quelques graphiques.
     C_K = [c[0] for c in temp]
     C_D = [c[1] for c in temp]
     C_KD = [round(C_K[i] / C_D[i], 2) for i in range(len(Classes))]
-    y_ = max(C_K)
-    y = max(y_, max(C_D))
     X_axis = np.arange(len(Classes))
     plt.clf()
     fig = plt.figure()
     fig.patch.set_facecolor('#978a84')
     ax = fig.add_subplot()
     for i in range(len(Classes)):
-        ax.text(X_axis[i], y + 0.01, f"KD : {C_KD[i]}", verticalalignment = 'bottom', horizontalalignment = "center")
+        ax.text(X_axis[i], max(C_K[i], C_D[i]) + 0.01, f"KD : {C_KD[i]}", verticalalignment = 'bottom', horizontalalignment = "center")
     plt.bar(X_axis - 0.2, C_K, 0.4, label = 'Kills', color = "#4b0101")
     plt.bar(X_axis + 0.2, C_D, 0.4, label = 'Morts', color = "#1f6357")
     plt.xticks(X_axis, Classes)
     plt.xlabel("Classes", size = "x-large", verticalalignment = 'top')
     plt.ylabel("Nombre de Joueurs", size = "x-large", verticalalignment = 'bottom')
     plt.title("Statistiques par classe", size = "x-large", verticalalignment = 'bottom')
+    plt.legend(loc = "best")
     plt.savefig(jeu / "filiere.png")
 
     # Plot des scores des meilleurs Joueurs
@@ -174,7 +173,7 @@ def main():  # Crée quelques graphiques.
     X_axis = np.arange(len(podium))
     for i in range(len(podium)):
         ax.text(X_axis[i], scores[i] + 0.01, f"{pivert[i]}", verticalalignment = 'bottom', horizontalalignment = "center")
-    plt.bar(range(len(pivert)), scores,color = '#4b0101')
+    plt.bar(range(len(pivert)), scores, color = '#4b0101')
     axes.set_ylim([0, y + 1])
     plt.xlabel("Joueurs", size = "x-large")
     plt.ylabel("Nombre de Kills", size = "x-large")
