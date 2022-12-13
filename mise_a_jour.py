@@ -6,7 +6,9 @@ import smtplib, ssl
 from pathlib import Path
 from getpass import getpass
 import time
-#import stats
+
+
+# import stats
 
 
 class bcolors:
@@ -90,7 +92,7 @@ def main():
         for tueur in set(tueurs):
             mail_global_multikill(tueur, tueurs.count(tueur))
 
-    #stats.main()
+    # stats.main()
 
     gagnant = jeu_fini()
     if gagnant:
@@ -106,9 +108,9 @@ def cree_liste_tueurs():
     imap = imaplib.IMAP4_SSL("imap.zoho.eu")
     # authentification
     imap.login(adresse, mot_de_passe)
-    imap.select('INBOX', readonly = False)  # Pour debugger, passer readonly à True, le script ne devrait pas marquer
+    imap.select('INBOX')  # Pour debugger, passer readonly à True, le script ne devrait pas marquer
     # pas les messages comme lus à chaque execution
-    (retcode, messages) = imap.uid('SEARCH', None, '(UNSEEN)')
+    (retcode, messages) = imap.uid('SEARCH', 'ALL')
     mails_tueurs = []
     nb_mails_non_lus = 0
     nb_morts = 0
@@ -116,6 +118,7 @@ def cree_liste_tueurs():
         for num in messages[0].split():
             typ, data = imap.uid('FETCH', num, '(RFC822)')
             nb_mails_non_lus += 1
+            print(nb_mails_non_lus)
             for response_part in data:
                 if isinstance(response_part, tuple):
                     original = message_from_bytes(response_part[1])
@@ -130,7 +133,7 @@ def cree_liste_tueurs():
                             mail_tueur = re.search('<(.*)>', original['From']).group(1)
                         except AttributeError:
                             mail_tueur = original[
-                                'From'].strip()  # Ajoute dans mails_tueur l'ensemble des mails  # ayant envoyé un message comportant "MORT" dans l'objet
+                                'From'].strip()  # Ajoute dans mails_tueur l'ensemble des mails ayant envoyé un  # message comportant "MORT" dans l'objet
                         mails_tueurs.append(mail_tueur)
             msg = message_from_bytes((data[0][1]))
             # MOVE MESSAGE TO ProcessedEmails FOLDER
