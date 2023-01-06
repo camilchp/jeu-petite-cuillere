@@ -48,9 +48,9 @@ JOUEURS = [Joueur(i) for i in range(N)]
 def main():  # Crée quelques graphiques.
     p = {}
     for j in JOUEURS:
-        p[j.mail] = {"2022-11-27": 0}
+        p[j.mail] = {"11-27": 0}
 
-    Kills = {"2022-11-27": 0}
+    Kills = {"11-27": 0}
 
     with historique.open("r") as f:
         H = f.readlines()
@@ -111,21 +111,25 @@ def main():  # Crée quelques graphiques.
     players = [95]
     for i in range(1, len(kills)):
         players.append(players[-1]-kills[i])
-    print(players)
+    # print(players)
 
     plt.clf()
     plt.figure().patch.set_facecolor('#978a84')
     plt.bar(range(len(Kills)), kills, tick_label = days, color = '#4b0101')
+    plt.xticks(rotation = 45)
     plt.xlabel("Date", size = "x-large")
     plt.ylabel("Morts", size = "x-large")
+    plt.yticks([])
     plt.title("Evolution du Nombre d'Eliminations par Jour", size = "x-large")
     plt.savefig(jeu / "kills.png")
 
     plt.clf()
     plt.figure().patch.set_facecolor('#978a84')
     plt.plot(days, players, '-o', color = "#1f6357")
+    plt.xticks(rotation = 45)
     plt.xlabel("Date", size = "x-large")
     plt.ylabel("Nombre de Joueurs", size = "x-large")
+    plt.yticks([])
     plt.title("Evolution du Nombre de Joueurs", size = "x-large")
     plt.savefig(jeu / "joueurs.png")
 
@@ -179,6 +183,3 @@ def main():  # Crée quelques graphiques.
     plt.ylabel("Nombre de Kills", size = "x-large")
     plt.title("Meilleurs Joueurs en Nombre de Kills", size = "x-large")
     plt.savefig(jeu / "podium.png")
-
-
-main()

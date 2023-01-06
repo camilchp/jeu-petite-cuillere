@@ -6,9 +6,7 @@ import smtplib, ssl
 from pathlib import Path
 from getpass import getpass
 import time
-
-
-# import stats
+import stats
 
 
 class bcolors:
@@ -76,11 +74,11 @@ def main():
     tueurs = cree_liste_tueurs()
     with historique.open("r") as f:
         e = f.readlines()
-        r = "-------------{date.today()}-------------\n" in e
+        r = f"-------------{date.today()}-------------\n" in e
 
     with historique.open("a") as f:
 
-        if not r:
+        if not r and tueurs:
             f.write(f"-------------{date.today()}-------------\n")
 
         for tueur in tueurs:
@@ -92,7 +90,7 @@ def main():
         for tueur in set(tueurs):
             mail_global_multikill(tueur, tueurs.count(tueur))
 
-    # stats.main()
+    stats.main()
 
     gagnant = jeu_fini()
     if gagnant:
@@ -118,7 +116,6 @@ def cree_liste_tueurs():
         for num in messages[0].split():
             typ, data = imap.uid('FETCH', num, '(RFC822)')
             nb_mails_non_lus += 1
-            print(nb_mails_non_lus)
             for response_part in data:
                 if isinstance(response_part, tuple):
                     original = message_from_bytes(response_part[1])
