@@ -48,9 +48,9 @@ JOUEURS = [Joueur(i) for i in range(N)]
 def main():  # Crée quelques graphiques.
     p = {}
     for j in JOUEURS:
-        p[j.mail] = {"11-27": 0}
+        p[j.mail] = {"2022-11-27": 0}
 
-    Kills = {"11-27": 0}
+    Kills = {"2022-11-27": 0}
 
     with historique.open("r") as f:
         H = f.readlines()

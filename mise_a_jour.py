@@ -1,11 +1,13 @@
-from datetime import date
 import imaplib
-from email import message_from_bytes
 import re
-import smtplib, ssl
-from pathlib import Path
-from getpass import getpass
+import smtplib
+import ssl
 import time
+from datetime import date
+from email import message_from_bytes
+from getpass import getpass
+from pathlib import Path
+
 import stats
 
 
@@ -132,10 +134,11 @@ def cree_liste_tueurs():
                             mail_tueur = original[
                                 'From'].strip()  # Ajoute dans mails_tueur l'ensemble des mails ayant envoyé un  # message comportant "MORT" dans l'objet
                         mails_tueurs.append(mail_tueur)
+                        print(result, mail_tueur)
             msg = message_from_bytes((data[0][1]))
             # MOVE MESSAGE TO ProcessedEmails FOLDER
             result = imap.uid("COPY", num, "Jeu_2022-2023")
-            print(result, mail_tueur)
+
             if result[0] == 'OK':
                 mov, data = imap.uid('STORE', num, '+FLAGS', '(\Deleted)')
             else:
